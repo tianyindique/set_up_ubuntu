@@ -1,5 +1,16 @@
 # set_up_ubuntu
-这是几个脚本，用于给新安装的ubuntu系统进行基本的配置
+
+这是几个脚本，用于给新安装的ubuntu系统进行基本的配置,并安装配置Android Studio和Flutter
+我是直接从官网复制的链接，随着时间推移，脚本可能失效
+
+# 使用方法
+## 1.进入脚本所在目录
+`cd path/to/your_script`
+## 2.赋予脚本执行权限
+`chmod +x your_script`
+每一个脚本都要加哦
+## 3.执行脚本（只用执行第一个）
+`./1_ubuntu_configure.sh`
 
 ## 第一个脚本要实现的功能
 ### 为ubuntu换源，我选的是中科大的源
