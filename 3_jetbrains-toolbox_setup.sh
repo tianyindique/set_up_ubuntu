@@ -1,49 +1,75 @@
 #!/bin/bash
 
 # 打一声招呼
-toilet -F metal "install jetbrains-toolbox..."
+toilet -F metal "Install JetBrains Toolbox..."
 
-# 定义一个带有样式效果的echo函数
+# 获取脚本所在目录
+SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+
+# 定义带有样式效果的echo函数
 echo_style() {
-  echo -e "\033[1;33;47m$1\033[0m"
+  echo -e "\033[1;33;47m$1\033[0m"  # 黄色字体，灰底
+}
+echo_error() {
+  echo -e "\033[1;31m$1\033[0m"  # 红色字体
 }
 
 # 安装FUSE2
-sudo apt install libfuse2
-# 安装Jetbrains toolbox, 并利用其安装Android Studio
+echo_style "Installing libfuse2..."
+if ! sudo apt install -y libfuse2; then
+  echo_error "Failed to install libfuse2. Please check your APT sources."
+  exit 1
+fi
+
+# 下载JetBrains Toolbox
 TOOLBOX_URL="https://download-alibaba.jetbrains.com.cn/toolbox/jetbrains-toolbox-2.5.2.35332.tar.gz"
-wget -O toolbox.tar.gz $TOOLBOX_URL
-echo_style "Jetbrains toolbox下载完成"
+TEMP_DIR=$(mktemp -d)
+echo_style "Downloading JetBrains Toolbox..."
+if ! wget -O "$TEMP_DIR/toolbox.tar.gz" "$TOOLBOX_URL"; then
+  echo_error "Download failed. Please check the URL or your network connection."
+  exit 1
+fi
 
-mkdir -p $HOME/Jetbrains-toolbox
-echo_style "解压Jetbrains toolbox..."
-tar -zxvf toolbox.tar.gz -C $HOME/Jetbrains-toolbox
-echo_style "Jetbrains toolbox解压完成！"
-rm toolbox.tar.gz
+# 解压JetBrains Toolbox
+INSTALL_DIR="$HOME/jetbrains-toolbox"
+echo_style "Extracting JetBrains Toolbox..."
+mkdir -p "$INSTALL_DIR"
+if ! tar -zxvf "$TEMP_DIR/toolbox.tar.gz" -C "$INSTALL_DIR"; then
+  echo_error "Extraction failed. Please check the downloaded file."
+  exit 1
+fi
 
-# 将解压后的文件移出来，并重命名
-cd $HOME/Jetbrains-toolbox
-for file in *; do
-  mv "$file" "$HOME/jetbrains-toolbox"
-done
-rm -r $HOME/Jetbrains-toolbox
+# 清理临时文件
+rm -rf "$TEMP_DIR"
 
-# 打开toolbox
-cd $HOME/jetbrains-toolbox
-echo_style "打开Jetbrains toolbox..."
-./jetbrains-toolbox
-echo_style "Jetbrains toolbox已打开"
+# 打开JetBrains Toolbox
+cd "$INSTALL_DIR" || exit 1
+EXECUTABLE=$(find . -type f -name "jetbrains-toolbox" | head -n 1)
+if [[ -x "$EXECUTABLE" ]]; then
+  echo_style "Opening JetBrains Toolbox..."
+  "$EXECUTABLE" &
+else
+  echo_error "JetBrains Toolbox executable not found!"
+  exit 1
+fi
 
-echo_style "请在toolbox里下载Android Studio和其他要用到的IDE"
-while true; do
+# 提示用户安装Android Studio
+echo_style "Please use JetBrains Toolbox to download Android Studio and other required IDEs."
+for i in {1..5}; do  # 允许最多5次提示
   read -p "Have you installed? (Y/y to continue, N/n to exit):" user_input
   case $user_input in
-      [Yy]) break;;
-      [Nn]) exit 1;;
-      *) echo_style "Invalid input. Please press Y/y to continue or N/n to exit.";;
+    [Yy]) break ;;
+    [Nn]) echo_error "Installation incomplete. Exiting."; exit 1 ;;
+    *) echo_style "Invalid input. Please press Y/y to continue or N/n to exit." ;;
   esac
 done
 
-# 打开安装flutter的脚本
-cd -
-./4_flutter_setup.sh
+# 返回脚本所在目录并执行Flutter安装脚本
+cd "$SCRIPT_DIR" || exit 1
+if [[ -f "./4_flutter_setup.sh" ]]; then
+  echo_style "Running Flutter setup script..."
+  ./4_flutter_setup.sh
+else
+  echo_error "Flutter setup script not found!"
+  exit 1
+fi
