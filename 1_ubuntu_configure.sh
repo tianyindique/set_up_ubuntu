@@ -56,6 +56,12 @@ sudo ufw enable
 #--------
 #------
 sudo timedatectl set-timezone Asia/Shanghai
+sudo apt install ntpdate
+sudo ntpdate time.windows.com
+sudo apt install util-linux
+sudo apt install util-linux-extra
+sudo hwclock --localtime --systohc
+
 
 #----------Step6 安装常用字体
 #--------
